@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Gohan's Tutoring — App</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:"Segoe UI",sans-serif; }
+  body { height:100vh; width:100vw; overflow:hidden; background:#000; color:#fff; }
+
+  /* AUTH SCREEN */
+  .auth-screen {
+    height:100vh; width:100vw;
+    display:flex; align-items:center; justify-content:center;
+    background: radial-gradient(circle at top left,#ff7a00 0,#000 45%),
+                radial-gradient(circle at bottom right,#ff7a00 0,#000 45%);
+  }
+  .auth-card {
+    width:360px; padding:24px 26px;
+    background:#111; border-radius:12px;
+    box-shadow:0 0 20px rgba(0,0,0,0.8);
+  }
+  .auth-title { font-size:22px; font-weight:700; color:#ff7a00; margin-bottom:6px; }
+  .auth-sub { font-size:13px; color:#ccc; margin-bottom:18px; }
+  .auth-label { font-size:13px; margin-top:10px; margin-bottom:4px; }
+  .auth-input {
+    width:100%; padding:10px; border-radius:8px;
+    border:1px solid #333; background:#000; color:#fff; outline:none;
+  }
+  .auth-input:focus { border-color:#ff7a00; box-shadow:0 0 8px rgba(255,122,0,0.7); }
+  .auth-btn {
+    width:100%; margin-top:16px; padding:10px;
+    border-radius:8px; border:none; cursor:pointer;
+    background:linear-gradient(135deg,#ff7a00,#ffb347);
+    color:#000; font-weight:700;
+    box-shadow:0 0 12px rgba(255,122,0,0.8);
+  }
+  .auth-toggle {
+    margin-top:10px; font-size:12px; color:#aaa; text-align:center; cursor:pointer;
+  }
+  .auth-toggle span { color:#ffb347; text-decoration:underline; }
+
+  /* APP LAYOUT */
+  .app { display:none; height:100vh; width:100vw; display:flex; }
+
+  /* SERVER BAR */
+  .servers {
+    width:80px; background:#0d0d0d; border-right:2px solid #111;
+    display:flex; flex-direction:column; align-items:center; padding-top:15px; gap:15px;
+  }
+  .server-icon {
+    width:55px; height:55px; border-radius:50%;
+    background:#ff7a00; display:flex; align-items:center; justify-content:center;
+    font-weight:700; color:#000; font-size:20px; cursor:pointer;
+    box-shadow:0 0 12px rgba(255,122,0,0.7); transition:0.2s;
+  }
+  .server-icon:hover { transform:scale(1.1); box-shadow:0 0 20px rgba(255,122,0,1); }
+
+  /* CHANNELS */
+  .channels {
+    width:260px; background:#111; border-right:2px solid #1a1a1a;
+    padding:16px; color:#ccc; display:flex; flex-direction:column;
+  }
+  .channel-header { font-size:16px; font-weight:700; color:#ff7a00; margin-bottom:10px; }
+  .user-tag { font-size:12px; color:#aaa; margin-bottom:16px; }
+  .channel { padding:8px; border-radius:6px; margin-bottom:6px; cursor:pointer; transition:0.2s; font-size:14px; }
+  .channel:hover { background:#1f1f1f; }
+  .channel.active {
+    background:#ff7a00; color:#000; font-weight:700;
+    box-shadow:0 0 12px rgba(255,122,0,0.8);
+  }
+
+  /* MAIN AREA */
+  .main {
+    flex:1; display:flex; flex-direction:column; background:#0a0a0a;
+  }
+
+  /* HEADER */
+  .chat-header {
+    padding:10px 16px; background:#000; border-bottom:2px solid #1a1a1a;
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .chat-title { font-size:18px; font-weight:700; color:#ff7a00; }
+  .voice-controls { display:flex; align-items:center; gap:10px; font-size:13px; }
+  .voice-btn {
+    padding:6px 10px; border-radius:6px; border:none; cursor:pointer;
+    background:#111; color:#ffb347; border:1px solid #333;
+  }
+  .voice-btn.active {
+    background:linear-gradient(135deg,#ff7a00,#ffb347);
+    color:#000; box-shadow:0 0 10px rgba(255,122,0,0.8);
+  }
+  .voice-status { color:#7fff7f; font-size:12px; }
+
+  /* BODY: CHAT + MEMBERS */
+  .body {
+    flex:1; display:flex; min-height:0;
+  }
+
+  .messages {
+    flex:1; padding:16px; overflow-y:auto; color:#ddd;
+  }
+  .msg { margin-bottom:18px; }
+  .msg-name { font-size:12px; font-weight:700; color:#ffb347; margin-bottom:3px; }
+  .msg-bubble {
+    background:#1a1a1a; padding:10px 14px; border-radius:8px;
+    max-width:70%; border:1px solid #333; font-size:14px;
+  }
+  .msg.you .msg-bubble {
+    background:linear-gradient(135deg,#ff7a00,#ffb347);
+    color:#000; margin-left:auto; border:none;
+    box-shadow:0 0 12px rgba(255,122,0,0.8);
+  }
+
+  /* MEMBERS LIST */
+  .members {
+    width:220px; background:#111; border-left:2px solid #1a1a1a;
+    padding:12px; font-size:13px;
+  }
+  .members-title { font-size:12px; color:#aaa; margin-bottom:8px; }
+  .member { padding:6px 4px; border-radius:4px; margin-bottom:4px; }
+  .member.me { color:#ffb347; }
+
+  /* INPUT BAR */
+  .input-bar {
+    padding:12px; background:#000; border-top:2px solid #1a1a1a;
+    display:flex; gap:10px;
+  }
+  .input-box {
+    flex:1; padding:10px 12px; border-radius:8px;
+    border:1px solid #333; background:#111; color:#fff; outline:none; font-size:14px;
+  }
+  .input-box:focus { border-color:#ff7a00; box-shadow:0 0 8px rgba(255,122,0,0.7); }
+  .send-btn {
+    padding:10px 16px; border-radius:8px; border:none; cursor:pointer;
+    background:linear-gradient(135deg,#ff7a00,#ffb347);
+    color:#000; font-weight:700; box-shadow:0 0 12px rgba(255,122,0,0.8);
+  }
+
+  .voice-banner {
+    display:none; padding:6px 16px; background:#111; border-bottom:1px solid #333;
+    font-size:12px; color:#ffb347;
+  }
+</style>
+</head>
+<body>
+
+<!-- AUTH SCREEN -->
+<div id="auth" class="auth-screen">
+  <div class="auth-card">
+    <div class="auth-title">Gohan's Tutoring</div>
+    <div class="auth-sub">Sign up or log in with your email (like a Google account).</div>
+
+    <div class="auth-label">Display name</div>
+    <input id="auth-name" class="auth-input" placeholder="Gohan">
+
+    <div class="auth-label">Email</div>
+    <input id="auth-email" class="auth-input" placeholder="you@example.com">
+
+    <button id="auth-btn" class="auth-btn">Continue</button>
+
+    <div class="auth-toggle">
+      This acts like Google sign in: if the email exists, you’ll just log in to that account.
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" class="app" style="display:none;">
+  <!-- SERVER BAR -->
+  <div class="servers">
+    <div class="server-icon">G</div>
+    <div class="server-icon">T</div>
+  </div>
+
+  <!-- CHANNELS -->
+  <div class="channels">
+    <div class="channel-header">Gohan's Tutoring</div>
+    <div id="user-tag" class="user-tag"></div>
+
+    <div class="channel active" data-channel="general"># general</div>
+    <div class="channel" data-channel="math"># math-help</div>
+    <div class="channel" data-channel="science"># science-help</div>
+    <div class="channel" data-channel="gaming"># gaming-break</div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div id="voice-banner" class="voice-banner">
+      In voice call • This is just UI — real audio needs a backend + WebRTC.
+    </div>
+
+    <div class="chat-header">
+      <div id="chat-title" class="chat-title"># general</div>
+      <div class="voice-controls">
+        <button id="voice-btn" class="voice-btn">Start Call</button>
+        <span id="voice-status" class="voice-status">Not in call</span>
+      </div>
+    </div>
+
+    <div class="body">
+      <div id="messages" class="messages"></div>
+
+      <div class="members">
+        <div class="members-title">ONLINE</div>
+        <div id="members-list"></div>
+      </div>
+    </div>
+
+    <div class="input-bar">
+      <input id="input" class="input-box" placeholder="Type a message...">
+      <button id="send-btn" class="send-btn">Send</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ===== AUTH / "GOOGLE" STYLE LOGIN (EMAIL-BASED) =====
+  const authScreen = document.getElementById("auth");
+  const appScreen = document.getElementById("app");
+  const authName = document.getElementById("auth-name");
+  const authEmail = document.getElementById("auth-email");
+  const authBtn = document.getElementById("auth-btn");
+  const userTag = document.getElementById("user-tag");
+  const membersList = document.getElementById("members-list");
+
+  let currentUser = null;
+
+  function loadUsers() {
+    return JSON.parse(localStorage.getItem("gt_users") || "[]");
+  }
+  function saveUsers(users) {
+    localStorage.setItem("gt_users", JSON.stringify(users));
+  }
+
+  function loginOrSignup() {
+    const name = authName.value.trim() || "Student";
+    const email = authEmail.value.trim().toLowerCase();
+    if (!email) return;
+
+    let users = loadUsers();
+    let user = users.find(u => u.email === email);
+
+    if (!user) {
+      user = { name, email };
+      users.push(user);
+      saveUsers(users);
+    }
+
+    currentUser = user;
+    startApp();
+  }
+
+  authBtn.addEventListener("click", loginOrSignup);
+  authEmail.addEventListener("keypress", e => { if (e.key === "Enter") loginOrSignup(); });
+
+  function startApp() {
+    authScreen.style.display = "none";
+    appScreen.style.display = "flex";
+    userTag.textContent = currentUser.name + " • " + currentUser.email;
+    renderMembers();
+    loadMessages();
+  }
+
+  function renderMembers() {
+    const users = loadUsers();
+    membersList.innerHTML = "";
+    users.forEach(u => {
+      const div = document.createElement("div");
+      div.className = "member" + (u.email === currentUser.email ? " me" : "");
+      div.textContent = u.name;
+      membersList.appendChild(div);
+    });
+  }
+
+  // ===== CHANNELS & MESSAGES =====
+  let currentChannel = "general";
+  const messagesBox = document.getElementById("messages");
+  const inputBox = document.getElementById("input");
+  const sendBtn = document.getElementById("send-btn");
+  const chatTitle = document.getElementById("chat-title");
+
+  const storedMessages = JSON.parse(localStorage.getItem("gt_messages") || "{}");
+  const messages = {
+    general: storedMessages.general || [],
+    math: storedMessages.math || [],
+    science: storedMessages.science || [],
+    gaming: storedMessages.gaming || []
+  };
+
+  function saveMessages() {
+    localStorage.setItem("gt_messages", JSON.stringify(messages));
+  }
+
+  function loadMessages() {
+    messagesBox.innerHTML = "";
+    messages[currentChannel].forEach(m => {
+      const div = document.createElement("div");
+      div.className = "msg" + (m.email === currentUser.email ? " you" : "");
+      div.innerHTML = `
+        <div class="msg-name">${m.name}</div>
+        <div class="msg-bubble">${m.text}</div>
+      `;
+      messagesBox.appendChild(div);
+    });
+    messagesBox.scrollTop = messagesBox.scrollHeight;
+  }
+
+  document.querySelectorAll(".channel").forEach(ch => {
+    ch.addEventListener("click", () => {
+      document.querySelectorAll(".channel").forEach(c => c.classList.remove("active"));
+      ch.classList.add("active");
+      currentChannel = ch.dataset.channel;
+      chatTitle.textContent = "# " + currentChannel;
+      loadMessages();
+    });
+  });
+
+  function sendMessage() {
+    const text = inputBox.value.trim();
+    if (!text) return;
+    const msg = { name: currentUser.name, email: currentUser.email, text };
+    messages[currentChannel].push(msg);
+    saveMessages();
+    inputBox.value = "";
+    loadMessages();
+  }
+
+  sendBtn.addEventListener("click", sendMessage);
+  inputBox.addEventListener("keypress", e => { if (e.key === "Enter") sendMessage(); });
+
+  // ===== VOICE CALL UI (NO REAL AUDIO) =====
+  const voiceBtn = document.getElementById("voice-btn");
+  const voiceStatus = document.getElementById("voice-status");
+  const voiceBanner = document.getElementById("voice-banner");
+  let inCall = false;
+  let callStart = null;
+  let callTimer = null;
+
+  function updateCallStatus() {
+    if (!inCall) {
+      voiceStatus.textContent = "Not in call";
+      voiceBanner.style.display = "none";
+      voiceBtn.classList.remove("active");
+      voiceBtn.textContent = "Start Call";
+      clearInterval(callTimer);
+    } else {
+      voiceBtn.classList.add("active");
+      voiceBtn.textContent = "End Call";
+      voiceBanner.style.display = "block";
+      callStart = Date.now();
+      callTimer = setInterval(() => {
+        const secs = Math.floor((Date.now() - callStart) / 1000);
+        voiceStatus.textContent = "In call • " + secs + "s";
+      }, 1000);
+    }
+  }
+
+  voiceBtn.addEventListener("click", () => {
+    inCall = !inCall;
+    updateCallStatus();
+  });
+
+  // NOTE: This is only UI. Real voice needs a backend + WebRTC signaling server.
+</script>
+</body>
+</html>
